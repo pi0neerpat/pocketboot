@@ -7,6 +7,17 @@
   </head>
   <body>
     <main id="app"></main>
+    <footer>
+      <div class="utilities">
+        <button type="button" id="log-toggle" class="link" aria-expanded="false" aria-controls="log">Show log ▸</button>
+        <span class="right">
+          <button type="button" id="copy-diagnostics" class="link">Copy diagnostics</button>
+          <button type="button" id="reveal-backups" class="link">Reveal backups in Finder</button>
+        </span>
+      </div>
+      <div id="log" class="log" role="log" aria-label="dfu-util log" tabindex="0" hidden></div>
+    </footer>
+    <div id="toast" class="toast" role="status" hidden></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
