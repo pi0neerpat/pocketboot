@@ -36,6 +36,9 @@
     "icon": [
       "icons/icon.png"
     ],
+    "externalBin": [
+      "binaries/dfu-util"
+    ],
     "macOS": {
       "minimumSystemVersion": "11.0",
       "hardenedRuntime": true
