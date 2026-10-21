@@ -5,7 +5,9 @@
 //! - `put|text`: write `text` to stdout with no newline
 //! - `sleep|ms`: go silent for `ms` milliseconds
 //! - `exit|code`: exit with `code`
-//! - `env|` / `argv|`: print each env var as `env K=V`, each arg as `arg A`
+//! - `env|` / `argv|`: print each env var as `env K` (`env K=V` for `PATH`
+//!   and `LANG` only, so a failing test never logs a secret), each arg as
+//!   `arg A`
 //!
 //! `\r`, `\n`, and `\t` in `text` are unescaped.
 
@@ -36,7 +38,10 @@ fn main() {
                 let mut vars: Vec<_> = std::env::vars().collect();
                 vars.sort();
                 for (k, v) in vars {
-                    writeln!(out, "env {k}={v}").unwrap();
+                    match k.as_str() {
+                        "PATH" | "LANG" => writeln!(out, "env {k}={v}").unwrap(),
+                        _ => writeln!(out, "env {k}").unwrap(),
+                    }
                 }
             }
             "argv" => {

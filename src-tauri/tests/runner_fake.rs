@@ -204,11 +204,7 @@ async fn environment_is_cleared_and_argv_passed_verbatim() {
         .iter()
         .filter_map(|l| l.strip_prefix("env "))
         // The wrapper's own variable and what `/bin/sh` itself sets.
-        .filter(|l| {
-            !["FAKE_DFU_SCRIPT=", "PWD=", "SHLVL=", "_="]
-                .iter()
-                .any(|p| l.starts_with(p))
-        })
+        .filter(|l| !["FAKE_DFU_SCRIPT", "PWD", "SHLVL", "_"].contains(l))
         .collect();
     assert_eq!(env, ["LANG=C", "PATH=/usr/bin:/bin"]);
     let argv: Vec<&str> = report
