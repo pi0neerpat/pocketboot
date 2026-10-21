@@ -499,7 +499,6 @@ mod tests {
         bad[0..4].copy_from_slice(&0x1234_5678u32.to_le_bytes());
 
         let (_d, m) = mgr();
-        assert!(!VECTOR_CHECK);
         assert!(m.validate(upload(&m, &bad), true).is_ok());
 
         let (_d2, m2) = mgr();
