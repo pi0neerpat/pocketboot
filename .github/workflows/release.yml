@@ -124,6 +124,10 @@ jobs:
         run: pnpm tauri build --target universal-apple-darwin
 
       - name: Prepare release assets
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
           DMG_SOURCE="$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg \
@@ -132,6 +136,11 @@ jobs:
             echo "Tauri did not produce a DMG."
             exit 1
           fi
+          xcrun notarytool submit "$DMG_SOURCE" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
           xcrun stapler staple "$DMG_SOURCE"
           xcrun stapler validate "$DMG_SOURCE"
           DMG_PATH="$RUNNER_TEMP/PocketBoot-v$RELEASE_VERSION-macOS-universal.dmg"
