@@ -2,6 +2,7 @@
 
 pub mod args;
 pub mod parser;
+pub mod runner;
 
 pub use args::{Invocation, Op};
 pub use parser::{
