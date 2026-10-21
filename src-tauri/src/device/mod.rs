@@ -3,5 +3,4 @@
 pub mod layout;
 pub mod watcher;
 
-pub use layout::probe;
 pub use watcher::{snapshot_from, watch, UsbDevice};

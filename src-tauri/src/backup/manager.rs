@@ -111,10 +111,6 @@ impl BackupManager {
         self
     }
 
-    pub fn root(&self) -> &Path {
-        &self.root
-    }
-
     pub fn serial_dir(&self, serial: Option<&Serial>) -> PathBuf {
         self.root.join(sanitize_serial(serial))
     }
@@ -375,7 +371,7 @@ pub fn sha256(bytes: &[u8]) -> [u8; 32] {
     sha2::Sha256::digest(bytes).into()
 }
 
-fn now_rfc3339() -> String {
+pub(crate) fn now_rfc3339() -> String {
     time::OffsetDateTime::now_utc()
         .format(&time::format_description::well_known::Rfc3339)
         .unwrap_or_default()

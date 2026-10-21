@@ -660,10 +660,7 @@ impl AppState {
     }
 
     fn on_elapsed(&mut self, id: u32, fx: &mut Vec<Effect>) {
-        if self.ctx.watch.as_ref().map(|w| w.id) != Some(id) {
-            return;
-        }
-        let Some(w) = self.ctx.watch.take() else {
+        let Some(w) = self.ctx.watch.take_if(|w| w.id == id) else {
             return;
         };
         if self.present(&w.device) {

@@ -142,7 +142,7 @@ pub fn diagnostics_text(ctx: &AppCtx) -> String {
         log: lock(&ctx.shared.log).all(),
     };
     let home = std::env::var_os("HOME").map(PathBuf::from);
-    diagnostics::build(&report, home.as_deref().map(Path::new))
+    diagnostics::build(&report, home.as_deref())
 }
 
 #[tauri::command]

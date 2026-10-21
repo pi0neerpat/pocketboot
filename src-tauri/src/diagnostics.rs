@@ -32,9 +32,7 @@ pub struct LogLine {
 impl LogLine {
     pub fn now(stream: LogStream, text: impl Into<String>) -> Self {
         Self {
-            ts: time::OffsetDateTime::now_utc()
-                .format(&time::format_description::well_known::Rfc3339)
-                .unwrap_or_default(),
+            ts: crate::backup::manager::now_rfc3339(),
             stream,
             text: text.into(),
         }

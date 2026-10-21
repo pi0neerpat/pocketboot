@@ -1,21 +1,9 @@
 //! R16: run `dfu-util -l` and read the alt-0 layout of the session's device.
 
-use tokio::sync::mpsc;
-
 use crate::dfu::parser::{parse_found, parse_layout};
-use crate::dfu::runner::{DfuRunner, RunReport};
-use crate::dfu::{args, DfuOutcome, Failure, FlashLayout};
+use crate::dfu::runner::RunReport;
+use crate::dfu::{DfuOutcome, Failure, FlashLayout};
 use crate::types::Serial;
-
-pub async fn probe(
-    runner: &impl DfuRunner,
-    serial: Option<&Serial>,
-) -> Result<FlashLayout, Failure> {
-    // The listing's log lines are only needed in `report.lines`.
-    let (tx, _rx) = mpsc::unbounded_channel();
-    let report = runner.run(args::list(), tx).await;
-    from_report(&report, serial)
-}
 
 /// The probe's result from a finished `dfu-util -l` run.
 pub fn from_report(report: &RunReport, serial: Option<&Serial>) -> Result<FlashLayout, Failure> {
@@ -41,7 +29,6 @@ pub fn select(lines: &[String], serial: Option<&Serial>) -> Result<FlashLayout, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dfu::runner::RunMsg;
     use crate::types::ReasonCode;
 
     const FLASH: &str = "@Internal Flash  /0x08000000/04*016Kg,01*064Kg,07*128Kg";
@@ -93,32 +80,13 @@ mod tests {
         );
     }
 
-    struct Canned(DfuOutcome, Vec<String>);
-
-    impl DfuRunner for Canned {
-        async fn run(
-            &self,
-            inv: args::Invocation,
-            _tx: mpsc::UnboundedSender<RunMsg>,
-        ) -> RunReport {
-            assert_eq!(inv, args::list());
-            RunReport {
-                outcome: self.0,
-                lines: self.1.clone(),
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn probe_runs_list_and_selects() {
-        let r = Canned(DfuOutcome::Ok, lines(&[found(0, FLASH, "A")]));
-        assert!(probe(&r, Some(&Serial::new("A"))).await.is_ok());
-    }
-
-    #[tokio::test]
-    async fn probe_passes_list_failures_through() {
+    #[test]
+    fn list_failures_pass_through() {
         let busy = Failure::Reason(ReasonCode::Busy);
-        let r = Canned(DfuOutcome::Failed(busy), vec![]);
-        assert_eq!(probe(&r, Some(&Serial::new("A"))).await, Err(busy));
+        let report = RunReport {
+            outcome: DfuOutcome::Failed(busy),
+            lines: vec![],
+        };
+        assert_eq!(from_report(&report, Some(&Serial::new("A"))), Err(busy));
     }
 }

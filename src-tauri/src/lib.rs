@@ -26,13 +26,14 @@ use machine::{Input, View};
 use orchestrator::{lock, Orchestrator, Shared};
 
 const QUIT_TITLE: &str = "The radio is restarting. Quit anyway?";
+const QUIT_LABEL: &str = "Quit";
 
 fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().clone();
     let manager = Arc::new(BackupManager::new(
         app.path().app_data_dir()?.join("backups"),
     ));
-    let settings_path = app.path().app_config_dir()?.join("settings.json");
+    let settings_path = app.path().app_config_dir()?.join(settings::FILE_NAME);
     let shared = Arc::new(Shared::new(settings::load(&settings_path).success_sound));
     let app_version = app.package_info().version.to_string();
     let runner = SidecarRunner::bundled().unwrap_or_else(|_| SidecarRunner::new(PathBuf::new()));
@@ -89,10 +90,10 @@ pub(crate) fn confirm_quit(app: &AppHandle) -> bool {
         .kind(MessageDialogKind::Warning)
         .buttons(MessageDialogButtons::OkCancelCustom(
             "Wait".into(),
-            "Quit".into(),
+            QUIT_LABEL.into(),
         ))
         .show_with_result(move |r| {
-            if r == MessageDialogResult::Custom("Quit".into()) {
+            if r == MessageDialogResult::Custom(QUIT_LABEL.into()) {
                 let shared = &quit_app.state::<AppCtx>().shared;
                 shared.quit_requested.store(true, Ordering::SeqCst);
                 if shared.may_exit() {

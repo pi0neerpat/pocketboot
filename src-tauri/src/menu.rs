@@ -23,7 +23,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let sound_on = app
         .path()
         .app_config_dir()
-        .map(|d| crate::settings::load(&d.join("settings.json")).success_sound)
+        .map(|d| crate::settings::load(&d.join(crate::settings::FILE_NAME)).success_sound)
         .unwrap_or(true);
     let about = AboutMetadata {
         version: Some(app.package_info().version.to_string()),
