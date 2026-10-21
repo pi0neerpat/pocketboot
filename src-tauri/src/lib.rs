@@ -4,6 +4,7 @@ pub mod device;
 pub mod dfu;
 pub mod diagnostics;
 pub mod machine;
+pub mod menu;
 pub mod messages;
 pub mod orchestrator;
 pub mod settings;
@@ -13,7 +14,7 @@ use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-use tauri::{Manager, WindowEvent};
+use tauri::{AppHandle, Manager, WindowEvent};
 use tauri_plugin_dialog::{
     DialogExt, MessageDialogButtons, MessageDialogKind, MessageDialogResult,
 };
@@ -70,18 +71,17 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// R34: closing mid-write asks first; Quit waits for the write to finish.
-fn on_close_requested(window: &tauri::Window, api: &tauri::CloseRequestApi) {
-    let app = window.app_handle().clone();
+/// R34: quitting mid-write asks first; Quit waits for the write to finish.
+/// Returns true when a confirmation took over, so the caller must not exit.
+pub(crate) fn confirm_quit(app: &AppHandle) -> bool {
     let ctx = app.state::<AppCtx>();
     let writing = matches!(
         lock(&ctx.shared.state).view(),
         View::Booting { .. } | View::Restoring { .. }
     );
     if !writing {
-        return;
+        return false;
     }
-    api.prevent_close();
     let quit_app = app.clone();
     app.dialog()
         .message(QUIT_TITLE)
@@ -100,6 +100,7 @@ fn on_close_requested(window: &tauri::Window, api: &tauri::CloseRequestApi) {
                 }
             }
         });
+    true
 }
 
 pub fn run() {
@@ -107,10 +108,14 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
+        .menu(menu::build)
+        .on_menu_event(menu::on_event)
         .setup(setup)
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
-                on_close_requested(window, api);
+                if confirm_quit(window.app_handle()) {
+                    api.prevent_close();
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![

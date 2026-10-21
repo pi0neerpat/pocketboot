@@ -41,7 +41,13 @@
     ],
     "macOS": {
       "minimumSystemVersion": "11.0",
-      "hardenedRuntime": true
-    }
+      "hardenedRuntime": true,
+      "entitlements": "Entitlements.plist",
+      "signingIdentity": null
+    },
+    "resources": {
+      "licenses/": "licenses/"
+    },
+    "copyright": "dfu-util is GPL-2.0-or-later; libusb is LGPL-2.1. See Licenses\u2026"
   }
 }

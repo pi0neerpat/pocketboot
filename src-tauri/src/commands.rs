@@ -89,18 +89,31 @@ pub fn restore_earlier_copy(ctx: State<'_, AppCtx>) {
     send(&ctx, Input::UserRestore);
 }
 
-#[tauri::command]
-pub fn reveal_backups(ctx: State<'_, AppCtx>) -> Result<(), String> {
-    let dir = ctx.manager.reveal_dir().map_err(|e| e.to_string())?;
-    Command::new("/usr/bin/open")
+/// Opens a folder in the platform file browser (R46: the only place that
+/// knows how).
+pub fn reveal(dir: &Path) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    let opener = "/usr/bin/open";
+    #[cfg(not(target_os = "macos"))]
+    let opener = "explorer";
+    Command::new(opener)
         .arg(dir)
         .status()
         .map_err(|e| e.to_string())?;
     Ok(())
 }
 
+pub fn reveal_backups_dir(ctx: &AppCtx) -> Result<(), String> {
+    reveal(&ctx.manager.reveal_dir().map_err(|e| e.to_string())?)
+}
+
 #[tauri::command]
-pub fn get_diagnostics(ctx: State<'_, AppCtx>) -> String {
+pub fn reveal_backups(ctx: State<'_, AppCtx>) -> Result<(), String> {
+    reveal_backups_dir(&ctx)
+}
+
+/// The R52 report text, shared by the command and the app menu.
+pub fn diagnostics_text(ctx: &AppCtx) -> String {
     let devices = lock(&ctx.shared.devices).clone();
     let serial = devices
         .iter()
@@ -133,12 +146,17 @@ pub fn get_diagnostics(ctx: State<'_, AppCtx>) -> String {
 }
 
 #[tauri::command]
+pub fn get_diagnostics(ctx: State<'_, AppCtx>) -> String {
+    diagnostics_text(&ctx)
+}
+
+#[tauri::command]
 pub fn get_log(ctx: State<'_, AppCtx>) -> Vec<LogLine> {
     lock(&ctx.shared.log).all()
 }
 
-#[tauri::command]
-pub fn set_success_sound(ctx: State<'_, AppCtx>, enabled: bool) -> Result<(), String> {
+/// Stores the R53 sound setting, shared by the command and the app menu.
+pub fn set_sound(ctx: &AppCtx, enabled: bool) -> Result<(), String> {
     ctx.shared.sound.store(enabled, Ordering::SeqCst);
     settings::save(
         &ctx.settings_path,
@@ -147,4 +165,9 @@ pub fn set_success_sound(ctx: State<'_, AppCtx>, enabled: bool) -> Result<(), St
         },
     )
     .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn set_success_sound(ctx: State<'_, AppCtx>, enabled: bool) -> Result<(), String> {
+    set_sound(&ctx, enabled)
 }
