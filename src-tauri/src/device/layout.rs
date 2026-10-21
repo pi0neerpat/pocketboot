@@ -3,7 +3,7 @@
 use tokio::sync::mpsc;
 
 use crate::dfu::parser::{parse_found, parse_layout};
-use crate::dfu::runner::DfuRunner;
+use crate::dfu::runner::{DfuRunner, RunReport};
 use crate::dfu::{args, DfuOutcome, Failure, FlashLayout};
 use crate::types::Serial;
 
@@ -14,6 +14,11 @@ pub async fn probe(
     // The listing's log lines are only needed in `report.lines`.
     let (tx, _rx) = mpsc::unbounded_channel();
     let report = runner.run(args::list(), tx).await;
+    from_report(&report, serial)
+}
+
+/// The probe's result from a finished `dfu-util -l` run.
+pub fn from_report(report: &RunReport, serial: Option<&Serial>) -> Result<FlashLayout, Failure> {
     match report.outcome {
         DfuOutcome::Failed(f) => Err(f),
         // `-l` never leaves DFU mode, so a success candidate is just a listing.
@@ -36,7 +41,7 @@ pub fn select(lines: &[String], serial: Option<&Serial>) -> Result<FlashLayout, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dfu::runner::{RunMsg, RunReport};
+    use crate::dfu::runner::RunMsg;
     use crate::types::ReasonCode;
 
     const FLASH: &str = "@Internal Flash  /0x08000000/04*016Kg,01*064Kg,07*128Kg";

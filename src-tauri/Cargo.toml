@@ -39,3 +39,4 @@ time = { version = "0.3", features = ["formatting", "macros"] }
 [dev-dependencies]
 proptest = "1.12"
 tempfile = "3"
+tokio = { version = "1.54", features = ["test-util", "macros", "rt"] }
