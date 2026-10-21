@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "PocketBoot main window. No shell, fs, or dialog access (R15, KTD3).",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "clipboard-manager:allow-write-text",
+    "notification:default"
+  ]
+}
