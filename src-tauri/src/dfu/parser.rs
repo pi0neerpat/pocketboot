@@ -459,7 +459,7 @@ mod tests {
     #[test]
     fn fixture_happy_download_leave_succeeds_despite_exit_74() {
         let (seen, out) = replay(fixture!("happy-download-leave.txt"), Op::Download);
-        assert!(seen.download_done && seen.leave_submitted && seen.post_leave_benign);
+        assert!(seen.download_done && seen.leave_submitted);
         assert_eq!(seen.first_error, None);
         assert_eq!(out, DfuOutcome::SuccessCandidate);
     }

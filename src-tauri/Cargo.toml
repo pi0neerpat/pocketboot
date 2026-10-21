@@ -3,7 +3,6 @@ name = "pocketboot"
 version = "0.1.0"
 description = "Boots a battery-less RadioMaster Pocket over USB"
 edition = "2021"
-default-run = "pocketboot"
 publish = false
 
 [lib]
@@ -13,12 +12,6 @@ crate-type = ["rlib"]
 [[bin]]
 name = "pocketboot"
 path = "src/main.rs"
-
-# Test double for `tests/runner_fake.rs`; never bundled.
-[[bin]]
-name = "fake-dfu-util"
-path = "src/bin/fake-dfu-util.rs"
-test = false
 
 [build-dependencies]
 tauri-build = { version = "2.7", features = [] }

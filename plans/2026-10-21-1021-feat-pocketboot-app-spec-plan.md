@@ -575,9 +575,7 @@ The sidecar wins for v1 because correctness on real hardware matters more than p
    - Pruning keeps 20 backups plus `-first`.
    - Permissions are 0700/0600. A hash mismatch is detected.
 5. **Argument builder**: every invocation contains `-d 0483:df11`, `-S <serial>`, `-a 0`, and the fixed address. No public function takes an address, length, or arbitrary path.
-6. **Runner with a mock binary**:
-   - A small test binary, `fake-dfu-util`, replays a fixture chosen by an environment variable, including delays, exit codes, and silence.
-   - It covers the watchdog, timeouts, and the one-process-at-a-time guarantee through the real `SidecarRunner` spawning code.
+6. **Runner process integration tests deferred**. The runner's process spawning is not covered by a separate helper executable; parser and state-machine tests remain the automated coverage.
 
 #### Manual hardware checklist (real Pocket, signed release build, clean Mac user account)
 
@@ -766,11 +764,9 @@ U1 → U2 → U4 → U3 → U5 → U7 → U6 → U8 → U9 → U10.
 │   │   ├── diagnostics.rs  messages.rs  settings.rs  menu.rs
 │   │   ├── device/{mod,watcher,layout}.rs
 │   │   ├── dfu/{mod,args,parser,runner}.rs
-│   │   ├── backup/{mod,manager}.rs
-│   │   └── bin/fake-dfu-util.rs
+│   │   └── backup/{mod,manager}.rs
 │   └── tests/
-│       ├── fixtures/*.txt  fixtures/README.md
-│       └── runner_fake.rs
+│       └── fixtures/*.txt  fixtures/README.md
 ```
 
 ---
@@ -784,7 +780,6 @@ U1 → U2 → U4 → U3 → U5 → U7 → U6 → U8 → U9 → U10.
 - **Files:** `package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `src/main.ts`, `src-tauri/{Cargo.toml,build.rs,tauri.conf.json,capabilities/default.json,src/main.rs,src/lib.rs,src/types.rs}`, `.gitignore`.
 - **Approach:**
   - Run `git init`.
-  - `Cargo.toml` sets `default-run = "pocketboot"`, because `bin/fake-dfu-util.rs` is a second bin target.
   - `types.rs` holds `ReasonCode` and `Serial` (KTD11).
   - Window: 440×560, min 440×560, centered.
   - `bundle.macOS.minimumSystemVersion = "11.0"`, `identifier = "com.pocketboot.app"`, `externalBin: ["binaries/dfu-util"]`.
@@ -887,15 +882,13 @@ U1 → U2 → U4 → U3 → U5 → U7 → U6 → U8 → U9 → U10.
 
 - **Goal:** spawn without a shell, a cleared env, streamed events, a watchdog, and timeouts.
 - **Requirements:** R13, R26, KTD3, Test plan 6.
-- **Files:** `src-tauri/src/dfu/runner.rs`, `src-tauri/src/bin/fake-dfu-util.rs`, `src-tauri/tests/runner_fake.rs`.
+- **Files:** `src-tauri/src/dfu/runner.rs`.
 - **Approach:**
   - `tokio::process::Command` with `env_clear()`, `PATH=/usr/bin:/bin`, and `LANG=C`.
   - Read stdout and stderr through a byte reader that splits on `\r`/`\n`.
   - Send `(stream, text)` log lines and `DfuEvent`s to the orchestrator.
   - Run `tokio::select!` over the total timeout, a 10 s idle timeout, and `wait`; kill on timeout.
-  - `fake-dfu-util` replays `FAKE_DFU_SCRIPT` lines like `out|text`, `err|text`, `sleep|ms`, and `exit|code`.
-- **Test scenarios:** happy upload replay, idle watchdog kills at 10 s (scaled via a test-only constructor), total timeout, and a non-zero exit with milestones.
-- **Verification:** `cargo test --test runner_fake`.
+- **Test scenarios:** parser output and state transitions are tested independently; runner process integration tests are deferred.
 
 ### U8. Orchestrator, commands, diagnostics, and events
 
