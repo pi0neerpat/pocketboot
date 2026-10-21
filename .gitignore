@@ -4,3 +4,4 @@ src-tauri/target/
 src-tauri/gen/
 src-tauri/binaries/dfu-util-*
 .DS_Store
+diagnostic-reports/

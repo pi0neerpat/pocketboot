@@ -1,8 +1,14 @@
 # dfu-util transcript fixtures
 
-**These transcripts are synthetic.** They were written by hand from dfu-util
-0.11 source wording, not captured from a real RadioMaster Pocket. Replace each
-one with a real capture once Q5 hardware captures exist (Definition of Done).
+The happy upload and download transcripts contain output captured from a
+successful RadioMaster Pocket session. The other transcripts remain synthetic,
+based on dfu-util 0.11 source wording; replace them with real captures before
+release (Q5 / Definition of Done).
+
+The diagnostics report records output but not process exit codes. The upload
+fixture uses exit 0, consistent with the app accepting the backup. The
+download fixture retains exit 74 to exercise the expected post-leave path; that
+exit code was not captured in the report.
 
 Format:
 

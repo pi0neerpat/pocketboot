@@ -17,11 +17,9 @@ The product contract and design live in
 
 ```sh
 pnpm install
-scripts/build-dfu-util.sh --stub   # dev stub; only answers -V
+scripts/build-dfu-util.sh
 pnpm tauri dev
 ```
-
-The stub lets `tauri-build` resolve `externalBin`, but it cannot talk to a radio.
 
 ## Test
 

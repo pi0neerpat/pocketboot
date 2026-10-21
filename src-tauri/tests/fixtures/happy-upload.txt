@@ -1,20 +1,29 @@
 # exit: 0
 dfu-util 0.11
-
 Copyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.
 Copyright 2010-2021 Tormod Volden and Stefan Schmidt
 This program is Free Software and has ABSOLUTELY NO WARRANTY
 Please report bugs to http://sourceforge.net/p/dfu-util/tickets/
-
 Opening DFU capable USB device...
 Device ID 0483:df11
 Device DFU version 011a
 Claiming USB DFU Interface...
 Setting Alternate Interface #0 ...
 Determining device status...
+DFU state(10) = dfuERROR, status(10) = Device's firmware is corrupt. It cannot return to run-time (non-DFU) operations
+Clearing status
+Determining device status...
 DFU state(2) = dfuIDLE, status(0) = No error condition is present
 DFU mode device DFU version 011a
 Device returned transfer size 2048
 DfuSe interface name: "Internal Flash  "
-Upload	[                         ]   0%            0 bytesUpload	[======                   ]  25%         4096 bytesUpload	[============             ]  50%         8192 bytesUpload	[==================       ]  75%        12288 bytesUpload	[=========================] 100%        16384 bytes
+Upload	[                         ]   0%            0 bytes
+Upload	[===                      ]  12%         2048 bytes
+Upload	[======                   ]  25%         4096 bytes
+Upload	[=========                ]  37%         6144 bytes
+Upload	[============             ]  50%         8192 bytes
+Upload	[===============          ]  62%        10240 bytes
+Upload	[==================       ]  75%        12288 bytes
+Upload	[=====================    ]  87%        14336 bytes
+Upload	[=========================] 100%        16384 bytes
 Upload done.

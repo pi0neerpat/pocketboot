@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Builds the universal dfu-util sidecar (R23, R41, R42).
 #
-#   scripts/build-dfu-util.sh          real build: dfu-util 0.11 + static libusb 1.0.27
-#   scripts/build-dfu-util.sh --stub   dev stub that only answers -V (KTD8)
+#   scripts/build-dfu-util.sh          dfu-util 0.11 + static libusb 1.0.27
 #
 # Output: src-tauri/binaries/dfu-util-{universal,aarch64,x86_64}-apple-darwin
 set -euo pipefail
@@ -22,24 +21,6 @@ install_all() {
     chmod 0755 "$OUT/dfu-util-$t"
   done
 }
-
-if [[ "${1:-}" == "--stub" ]]; then
-  stub="$(mktemp)"
-  cat >"$stub" <<'STUB'
-#!/bin/sh
-# PocketBoot dev stub. Not dfu-util. Replace with scripts/build-dfu-util.sh.
-if [ "$1" = "-V" ]; then
-  echo "dfu-util 0.11 (stub)"
-  exit 0
-fi
-echo "dfu-util stub: no device access" >&2
-exit 1
-STUB
-  install_all "$stub"
-  rm -f "$stub"
-  echo "stub sidecar written to $OUT"
-  exit 0
-fi
 
 export MACOSX_DEPLOYMENT_TARGET=11.0
 WORK="$(mktemp -d)"
@@ -71,11 +52,15 @@ done
 
 lipo -create -output "$WORK/dfu-util" "$WORK/dfu-util-arm64" "$WORK/dfu-util-x86_64"
 
-# Only system libraries may be linked dynamically.
-if otool -L "$WORK/dfu-util" | tail -n +2 | grep -vE '^\s+(/usr/lib/|/System/)'; then
-  echo "error: dfu-util links a non-system dylib" >&2
-  exit 1
-fi
+# Only system libraries may be linked dynamically. Check each thin binary
+# separately so lipo's architecture headings are not mistaken for dylibs.
+for arch in arm64 x86_64; do
+  if otool -L "$WORK/dfu-util-$arch" | tail -n +2 | grep -vE '^\s+(/usr/lib/|/System/)'; then
+    echo "error: dfu-util ($arch) links a non-system dylib" >&2
+    echo "inspect with: otool -L '$WORK/dfu-util-$arch'" >&2
+    exit 1
+  fi
+done
 
 install_all "$WORK/dfu-util"
 "$OUT/dfu-util-universal-apple-darwin" -V | head -1
