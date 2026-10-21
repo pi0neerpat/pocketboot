@@ -38,6 +38,9 @@ pub enum Failure {
     NoDevice,
     Conflict,
     Unsupported,
+    /// `Cannot open file` / `File exists`: a PocketBoot bug, since R19 gives
+    /// every read a fresh path. Shown with the internal-error copy.
+    Internal,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -197,7 +200,7 @@ pub fn classify(line: &str, ctx: Ctx) -> DfuEvent {
         return error(Failure::Reason(ReasonCode::UsbIo));
     }
     if any(&["cannot open file", "file exists"]) {
-        return error(Failure::Reason(ReasonCode::Unknown));
+        return error(Failure::Internal);
     }
     progress(&l).unwrap_or(DfuEvent::Other)
 }
@@ -367,8 +370,8 @@ mod tests {
             ("LIBUSB_ERROR_TIMEOUT", DL, Box::new(err(Failure::Reason(UsbIo)))),
             ("dfu-util: Error during upload: LIBUSB_ERROR_OTHER", UP, Box::new(err(Failure::Reason(UsbIo)))),
             ("dfu-util: Error during download get_status", DL, Box::new(err(Failure::Reason(UsbIo)))),
-            ("dfu-util: Cannot open file /x.partial for writing", UP, Box::new(err(Failure::Reason(Unknown)))),
-            ("dfu-util: File exists", UP, Box::new(err(Failure::Reason(Unknown)))),
+            ("dfu-util: Cannot open file /x.partial for writing", UP, Box::new(err(Failure::Internal))),
+            ("dfu-util: File exists", UP, Box::new(err(Failure::Internal))),
             ("Device returned transfer size 2048", UP, Box::new(is(DfuEvent::Other))),
         ];
         for (line, ctx, check) in cases {

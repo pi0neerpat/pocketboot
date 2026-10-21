@@ -1,5 +1,7 @@
 pub mod backup;
 pub mod dfu;
+pub mod machine;
+pub mod messages;
 pub mod types;
 
 pub fn run() {
