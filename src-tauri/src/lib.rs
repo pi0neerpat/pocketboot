@@ -1,4 +1,5 @@
 pub mod backup;
+pub mod device;
 pub mod dfu;
 pub mod machine;
 pub mod messages;
