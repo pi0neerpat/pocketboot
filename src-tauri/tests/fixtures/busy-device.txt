@@ -1,0 +1,10 @@
+# exit: 74
+dfu-util 0.11
+
+Copyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.
+Copyright 2010-2021 Tormod Volden and Stefan Schmidt
+This program is Free Software and has ABSOLUTELY NO WARRANTY
+Please report bugs to http://sourceforge.net/p/dfu-util/tickets/
+
+Opening DFU capable USB device...
+dfu-util: Cannot open DFU device 0483:df11 found on devnum 5 (LIBUSB_ERROR_ACCESS)

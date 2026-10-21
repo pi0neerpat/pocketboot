@@ -1,4 +1,5 @@
 pub mod backup;
+pub mod dfu;
 pub mod types;
 
 pub fn run() {
