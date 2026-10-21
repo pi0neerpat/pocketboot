@@ -341,6 +341,11 @@ impl AppState {
         {
             return;
         }
+        self.react_to_bus(fx);
+    }
+
+    /// Ends or keeps the session for the current bus, then looks for a new one.
+    fn react_to_bus(&mut self, fx: &mut Vec<Effect>) {
         if let Some(s) = &self.ctx.session {
             if !self.present(&s.device) {
                 self.ctx.session = None;
@@ -636,7 +641,17 @@ impl AppState {
             }
             // The orchestrator's pre-write hash check failed: nothing was
             // written, so take a fresh backup.
-            DfuOutcome::Failed(Failure::Reason(ReasonCode::HashMismatch)) => self.begin_backup(fx),
+            // Snapshots were held back during the write, so catch up first.
+            DfuOutcome::Failed(Failure::Reason(ReasonCode::HashMismatch)) => {
+                match &self.ctx.session {
+                    Some(s) if self.alone(&s.device) => self.begin_backup(fx),
+                    _ => {
+                        self.ctx.session = None;
+                        self.view = View::Waiting;
+                        self.react_to_bus(fx);
+                    }
+                }
+            }
             DfuOutcome::Failed(f) => {
                 let (reason, message) = describe(f);
                 self.failed(reason, message);
@@ -1310,6 +1325,27 @@ mod tests {
         ))));
         assert_eq!(fx, [Effect::RunUpload(sa())]);
         assert_eq!(r.kind(), "backingUp");
+    }
+
+    /// Snapshots are held back during the write, so the bus can change under
+    /// it. A failed pre-write check catches up before reading again (R10).
+    #[test]
+    fn hash_mismatch_catches_up_with_the_bus_first() {
+        let mut r = Run::booting();
+        r.send(snap(&[pocket("A"), other("X")]));
+        let fx = r.send(Input::DfuExited(DfuOutcome::Failed(Failure::Reason(
+            ReasonCode::HashMismatch,
+        ))));
+        assert!(fx.is_empty(), "{fx:?}");
+        assert_eq!(r.kind(), "conflict");
+
+        let mut r = Run::booting();
+        r.send(snap(&[]));
+        let fx = r.send(Input::DfuExited(DfuOutcome::Failed(Failure::Reason(
+            ReasonCode::HashMismatch,
+        ))));
+        assert!(fx.is_empty(), "{fx:?}");
+        assert_eq!(r.kind(), "waiting");
     }
 
     // ---- dataChanged / restoring ----
